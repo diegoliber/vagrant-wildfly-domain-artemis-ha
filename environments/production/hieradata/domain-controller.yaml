@@ -1,0 +1,127 @@
+profile::wildfly::domain::controller::properties:
+  jboss.bind.address: '0.0.0.0'
+  jboss.bind.address.management: '172.28.128.20'
+  jboss.management.http.port: '9990'
+  jboss.management.https.port: '9993'
+  jboss.http.port: '8080'
+  jboss.https.port: '8443'
+  jboss.ajp.port: '8009'
+
+profile::wildfly::cache_dir: '/var/cache/wget'
+
+profile::wildfly::domain::controller::proxies:
+  - '172.28.128.10:6666'
+
+profile::wildfly::domain::controller::profiles:
+  - name: 'messaging-master'
+    source: 'full-ha'
+  - name: 'messaging-backup'
+    source: 'full-ha'
+
+
+profile::wildfly::domain::controller::loggers:
+  # - name: 'org.jgroups'
+  #   profile: 'full-ha'
+  #   level: 'DEBUG'    
+  # - name: 'org.apache.activemq'
+  #   profile: 'full-ha'
+  #   level: 'DEBUG'
+  - name: 'org.jgroups'
+    profile: 'messaging-master'
+    level: 'DEBUG'    
+  - name: 'org.apache.activemq'
+    profile: 'messaging-master'
+    level: 'DEBUG'
+  - name: 'org.jgroups'
+    profile: 'messaging-backup'
+    level: 'DEBUG'    
+  - name: 'org.apache.activemq'
+    profile: 'messaging-backup'
+    level: 'DEBUG'
+
+
+profile::wildfly::domain::controller::server_groups:
+  # - name: 'messaging-grp'
+  #   profile: 'full-ha'
+  #   socket_binding_group: 'full-ha-sockets'
+  #   socket_binding_port_offset: 0
+  - name: 'messaging-master-grp'
+    profile: 'messaging-master'
+    socket_binding_group: 'full-ha-sockets'
+    socket_binding_port_offset: 0
+  - name: 'messaging-backup-grp'
+    profile: 'messaging-backup'
+    socket_binding_group: 'full-ha-sockets'
+    socket_binding_port_offset: 0
+
+profile::wildfly::domain::controller::inbound_endpoints:
+  - name: 'jgroups-tcpping'
+    socket_binding_group: 'full-ha-sockets'
+    interface: 'public'
+    port: '7610'
+
+profile::wildfly::domain::controller::outbound_destinations:
+  - name: 'jgroups-tcp-slave1'
+    socket_binding_group: 'full-ha-sockets'
+    host: '172.28.128.21'
+    port: '7610'
+  - name: 'jgroups-tcp-slave2'
+    socket_binding_group: 'full-ha-sockets'
+    host: '172.28.128.22'
+    port: '7610'
+
+profile::wildfly::domain::tcpping::tcpping_configs:
+  - profile: 'messaging-master'
+    inbound_endpoint: 'jgroups-tcpping'
+    outbound_destinations:
+      - jgroups-tcp-slave1
+      - jgroups-tcp-slave2
+    channels:
+      - 'activemq-channel'
+  - profile: 'messaging-backup'
+    inbound_endpoint: 'jgroups-tcpping'
+    outbound_destinations:
+      - jgroups-tcp-slave1
+      - jgroups-tcp-slave2
+    channels:
+      - 'activemq-channel'
+
+profile::wildfly::domain::messaging::messaging_configs:
+  - profile: 'messaging-master'
+    queue_configs:
+      - name: 'TestQueue'
+        entries: [ 'java:/jms/queue/test', 'java:jboss/exported/jms/queue/test' ]
+        durable: true
+    topic_configs:
+      - name: 'TestTopic'
+        entries: [ 'java:/jms/topic/test', 'java:jboss/exported/jms/topic/test' ]
+        durable: true
+    jgroups_channel: 'activemq-channel'
+    jgroups_cluster: 'activemq-cluster'
+    connector: ['http-connector']
+    broadcast_group: 'bg-group1'
+    broadcast_period: 2000
+    discovery_group: 'dg-group1'
+    refresh_timeout: 10000
+    cluster_user: 'artemis'
+    cluster_password: 'P@ssword00'
+    ha_policy: 'replication-master'
+  - profile: 'messaging-backup'
+    queue_configs:
+      - name: 'TestQueue'
+        entries: [ 'java:/jms/queue/test', 'java:jboss/exported/jms/queue/test' ]
+        durable: true
+    topic_configs:
+      - name: 'TestTopic'
+        entries: [ 'java:/jms/topic/test', 'java:jboss/exported/jms/topic/test' ]
+        durable: true
+    jgroups_channel: 'activemq-channel'
+    jgroups_cluster: 'activemq-cluster'
+    connector: ['http-connector']
+    broadcast_group: 'bg-group1'
+    broadcast_period: 2000
+    discovery_group: 'dg-group1'
+    refresh_timeout: 10000
+    cluster_user: 'artemis'
+    cluster_password: 'P@ssword00'
+    ha_policy: 'replication-slave'

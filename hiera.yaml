@@ -1,0 +1,8 @@
+---
+:backends:
+  - yaml
+:yaml:
+  :datadir: '/vagrant/environments/production/hieradata/'
+:hierarchy:
+  - "%{::hostname}"
+  - common

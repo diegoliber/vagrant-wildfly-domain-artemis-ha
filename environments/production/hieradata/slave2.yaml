@@ -1,0 +1,5 @@
+profile::wildfly::host::controller::bind_address: '172.28.128.22'
+profile::wildfly::host::controller::server_group: 'messaging-master-grp'
+
+profile::wildfly::host::controller::properties:
+  'messaging.ha.group_name': msg_grp2

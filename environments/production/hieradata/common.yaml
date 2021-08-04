@@ -1,0 +1,15 @@
+profile::wildfly::cache_dir: '/var/cache/wget'
+
+profile::wildfly::host::controller::domain_bind_address: '172.28.128.20'
+profile::wildfly::host::controller::domain_secret: 'd2lsZGZseQ=='
+profile::wildfly::host::controller::remote_username: 'wildfly'
+profile::wildfly::host::controller::remote_password: 'wildfly'
+
+profile::wildfly::domain::mgmt_user:
+  username: 'wildfly'
+  password: 'wildfly'
+
+profile::wildfly::domain::app_users:
+  - name: 'jmsuser'
+    password: 'P@ssword00'
+    roles: 'guest'
